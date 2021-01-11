@@ -1,7 +1,10 @@
-import { Observable } from 'rxjs/Observable';
-import 'rxjs/add/observable/of';
-import 'rxjs/add/operator/map';
-import 'rxjs/add/operator/catch';
+import { of } from 'rxjs';
+import {
+  mergeMap,
+  filter,
+  map,
+  catchError,
+} from 'rxjs/operators';
 
 import {
   GET_CURRENCIES,
@@ -9,13 +12,17 @@ import {
   getCurrenciesFailure,
 } from '../actions';
 
-export default ({ currenciesApi }) => (action$, store) => {
+export default ({ currenciesApi }) => (action$, state$) => {
   return action$
-    .filter(action => action.type === GET_CURRENCIES)
-    .mergeMap(() => {
-      return currenciesApi
-        .getAll(store.getState().okapi)
-        .map(getCurrenciesSuccess)
-        .catch(errors => Observable.of(getCurrenciesFailure({ errors })));
-    });
+    .pipe(
+      filter(action => action.type === GET_CURRENCIES),
+      mergeMap(() => {
+        return currenciesApi
+          .getAll(state$.value.okapi)
+          .pipe(
+            map(getCurrenciesSuccess),
+            catchError(errors => of(getCurrenciesFailure({ errors }))),
+          );
+      }),
+    );
 };

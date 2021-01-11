@@ -1,7 +1,10 @@
-import { Observable } from 'rxjs/Observable';
-import 'rxjs/add/observable/of';
-import 'rxjs/add/operator/map';
-import 'rxjs/add/operator/catch';
+import { of } from 'rxjs';
+import {
+  mergeMap,
+  filter,
+  map,
+  catchError,
+} from 'rxjs/operators';
 
 import {
   getPackageTitlesSuccess,
@@ -9,10 +12,10 @@ import {
   GET_PACKAGE_TITLES,
 } from '../actions';
 
-export default ({ packageTitlesApi }) => (action$, store) => {
-  return action$
-    .filter(action => action.type === GET_PACKAGE_TITLES)
-    .mergeMap(action => {
+export default ({ packageTitlesApi }) => (action$, state$) => {
+  return action$.pipe(
+    filter(action => action.type === GET_PACKAGE_TITLES),
+    mergeMap(action => {
       const {
         payload: {
           packageId,
@@ -21,8 +24,11 @@ export default ({ packageTitlesApi }) => (action$, store) => {
       } = action;
 
       return packageTitlesApi
-        .getCollection(store.getState().okapi, packageId, params)
-        .map(getPackageTitlesSuccess)
-        .catch(errors => Observable.of(getPackageTitlesFailure({ errors })));
-    });
+        .getCollection(state$.value.okapi, packageId, params)
+        .pipe(
+          map(getPackageTitlesSuccess),
+          catchError(errors => of(getPackageTitlesFailure({ errors })))
+        );
+    }),
+  );
 };

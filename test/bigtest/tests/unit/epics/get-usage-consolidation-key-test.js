@@ -1,7 +1,7 @@
 /* global describe, it, beforeEach */
 import { expect } from 'chai';
 
-import { TestScheduler } from 'rxjs/Rx';
+import { TestScheduler } from 'rxjs/testing';
 
 import { createGetUsageConsolidationKeyEpic } from '../../../../../src/redux/epics';
 import {
@@ -20,17 +20,12 @@ describe('(epic) getUsageConsolidationKey', () => {
   });
 
   const state$ = {
-    getState: () => {
-      return {
-        okapi: {
-          url: 'https://folio-snapshot',
-          tenant: 'diku',
-          token: 'token',
-        },
-      };
+    value: {
+      url: 'https://folio-snapshot',
+      tenant: 'diku',
+      token: 'token',
     },
   };
-
 
   it('should handle successful data fetching', () => {
     const response = { body: { data: {} } };

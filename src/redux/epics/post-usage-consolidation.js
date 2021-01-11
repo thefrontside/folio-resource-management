@@ -1,7 +1,10 @@
-import { Observable } from 'rxjs/Observable';
-import 'rxjs/add/observable/of';
-import 'rxjs/add/operator/map';
-import 'rxjs/add/operator/catch';
+import { of } from 'rxjs';
+import {
+  mergeMap,
+  filter,
+  map,
+  catchError,
+} from 'rxjs/operators';
 
 import {
   POST_USAGE_CONSOLIDATION,
@@ -9,15 +12,20 @@ import {
   postUsageConsolidationFailure,
 } from '../actions';
 
-export default ({ usageConsolidationApi }) => (action$, store) => {
-  return action$
-    .filter(action => action.type === POST_USAGE_CONSOLIDATION)
-    .mergeMap(({ payload }) => {
-      const { credentialsId, data } = payload;
+export default ({ usageConsolidationApi }) => (action$, state$) => {
+  return action$.pipe(
+    filter(action => action.type === POST_USAGE_CONSOLIDATION),
+    mergeMap(action => {
+      const {
+        payload: { credentialsId, data },
+      } = action;
 
       return usageConsolidationApi
-        .postUsageConsolidation(store.getState().okapi, credentialsId, { data })
-        .map(postUsageConsolidationSuccess)
-        .catch(errors => Observable.of(postUsageConsolidationFailure(errors)));
-    });
+        .postUsageConsolidation(state$.value.okapi, credentialsId, { data })
+        .pipe(
+          map(postUsageConsolidationSuccess),
+          catchError(errors => of(postUsageConsolidationFailure(errors)))
+        );
+    }),
+  );
 };

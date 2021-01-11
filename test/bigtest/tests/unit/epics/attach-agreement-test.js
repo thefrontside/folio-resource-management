@@ -1,21 +1,19 @@
 /* global describe, it, beforeEach */
 import { expect } from 'chai';
 
-import { TestScheduler } from 'rxjs/Rx';
+import { TestScheduler } from 'rxjs/testing';
 
 import { createAttachAgreementEpic } from '../../../../../src/redux/epics';
 
 describe('(epic) attachAgreement', () => {
   const state$ = {
-    getState: () => {
-      return {
-        okapi: {
-          url: 'https://folio-snapshot',
-          tenant: 'diku',
-          token: 'token',
-        }
-      };
-    }
+    value: {
+      okapi: {
+        url: 'https://folio-snapshot',
+        tenant: 'diku',
+        token: 'token',
+      }
+    },
   };
 
   let testScheduler;

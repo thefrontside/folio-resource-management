@@ -1,6 +1,6 @@
 /* global describe, it, beforeEach */
 import { expect } from 'chai';
-import { TestScheduler } from 'rxjs/Rx';
+import { TestScheduler } from 'rxjs/testing';
 
 import { createPatchKBCredentialsEpic } from '../../../../../src/redux/epics';
 
@@ -12,13 +12,13 @@ import {
 
 describe('(epic) PatchKBCredentialsEpic', () => {
   const state$ = {
-    getState: () => ({
+    value: {
       okapi: {
         url: 'https://folio-snapshot',
         tenant: 'diku',
         token: 'token',
       },
-    }),
+    },
   };
 
   let testScheduler;

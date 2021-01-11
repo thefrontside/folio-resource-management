@@ -1,4 +1,4 @@
-import { TestScheduler } from 'rxjs/Rx';
+import { TestScheduler } from 'rxjs/testing';
 
 import createGetPackageTitlesEpic from '../get-package-titles';
 
@@ -18,14 +18,12 @@ describe('(epic) getPackageTitles', () => {
   });
 
   const state$ = {
-    getState: () => {
-      return {
-        okapi: {
-          url: 'https://folio-snapshot',
-          tenant: 'diku',
-          token: 'token',
-        },
-      };
+    value: {
+      okapi: {
+        url: 'https://folio-snapshot',
+        tenant: 'diku',
+        token: 'token',
+      },
     },
   };
 

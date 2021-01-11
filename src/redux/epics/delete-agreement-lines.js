@@ -1,7 +1,10 @@
-import { Observable } from 'rxjs/Observable';
-import 'rxjs/add/observable/of';
-import 'rxjs/add/operator/map';
-import 'rxjs/add/operator/catch';
+import { of } from 'rxjs';
+import {
+  mergeMap,
+  filter,
+  map,
+  catchError,
+} from 'rxjs/operators';
 
 import {
   deleteAgreementLinesSuccess,
@@ -9,25 +12,28 @@ import {
   GET_AGREEMENT_LINES_SUCCESS,
 } from '../actions';
 
-export default ({ agreementsApi }) => (action$, store) => {
+export default ({ agreementsApi }) => (action$, state$) => {
   return action$
-    .filter(action => action.type === GET_AGREEMENT_LINES_SUCCESS)
-    .mergeMap(({ payload }) => {
-      const {
-        okapi,
-        eholdings: { data: { agreements: { unassignedAgreement } } },
-      } = store.getState();
+    .pipe(
+      filter(action => action.type === GET_AGREEMENT_LINES_SUCCESS),
+      mergeMap(({ payload }) => {
+        const {
+          okapi,
+          eholdings: { data: { agreements: { unassignedAgreement } } },
+        } = state$.value;
 
-      const items = payload.map(id => ({ id, _delete: true }));
+        const items = payload.map(id => ({ id, _delete: true }));
 
-      const agreement = {
-        ...unassignedAgreement,
-        items,
-      };
+        const agreement = {
+          ...unassignedAgreement,
+          items,
+        };
 
-      return agreementsApi
-        .deleteAgreementLines(okapi, agreement)
-        .map(() => deleteAgreementLinesSuccess())
-        .catch(errors => Observable.of(deleteAgreementLinesFailure({ errors })));
-    });
+        return agreementsApi.deleteAgreementLines(okapi, agreement)
+          .pipe(
+            map(() => deleteAgreementLinesSuccess()),
+            catchError(errors => of(deleteAgreementLinesFailure({ errors }))),
+          );
+      }),
+    );
 };

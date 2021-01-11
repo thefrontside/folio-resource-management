@@ -1,7 +1,10 @@
-import { Observable } from 'rxjs/Observable';
-import 'rxjs/add/observable/of';
-import 'rxjs/add/operator/map';
-import 'rxjs/add/operator/catch';
+import { of } from 'rxjs';
+import {
+  mergeMap,
+  filter,
+  map,
+  catchError,
+} from 'rxjs/operators';
 
 import {
   GET_COST_PER_USE_PACKAGE_TITLES,
@@ -9,22 +12,27 @@ import {
   getCostPerUsePackageTitlesFailure,
 } from '../actions';
 
-export default ({ costPerUseApi }) => (action$, store) => {
-  return action$
-    .filter(action => action.type === GET_COST_PER_USE_PACKAGE_TITLES)
-    .mergeMap(({ payload: { id, filterData, loadMore } }) => costPerUseApi
-      .getPackageTitlesCostPerUse(store.getState().okapi, id, filterData)
-      .map((payload) => {
-        const costPerUseData = {
-          type: 'packageTitleCostPerUse',
-          attributes: {
-            resources: payload.data,
-            meta: payload.meta,
-            parameters: payload.parameters,
-          },
-        };
+export default ({ costPerUseApi }) => (action$, state$) => {
+  return action$.pipe(
+    filter(action => action.type === GET_COST_PER_USE_PACKAGE_TITLES),
+    mergeMap(({ payload: { id, filterData, loadMore } }) => {
+      return costPerUseApi
+        .getPackageTitlesCostPerUse(state$.value.okapi, id, filterData)
+        .pipe(
+          map((payload) => {
+            const costPerUseData = {
+              type: 'packageTitleCostPerUse',
+              attributes: {
+                resources: payload.data,
+                meta: payload.meta,
+                parameters: payload.parameters,
+              },
+            };
 
-        return getCostPerUsePackageTitlesSuccess(costPerUseData, loadMore);
-      })
-      .catch(errors => Observable.of(getCostPerUsePackageTitlesFailure({ errors }))));
+            return getCostPerUsePackageTitlesSuccess(costPerUseData, loadMore);
+          }),
+          catchError(errors => of(getCostPerUsePackageTitlesFailure({ errors })))
+        );
+    }),
+  );
 };

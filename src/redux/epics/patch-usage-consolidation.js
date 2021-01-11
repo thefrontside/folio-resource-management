@@ -1,7 +1,10 @@
-import { Observable } from 'rxjs/Observable';
-import 'rxjs/add/observable/of';
-import 'rxjs/add/operator/map';
-import 'rxjs/add/operator/catch';
+import { of } from 'rxjs';
+import {
+  mergeMap,
+  filter,
+  map,
+  catchError,
+} from 'rxjs/operators';
 
 import {
   PATCH_USAGE_CONSOLIDATION,
@@ -9,15 +12,18 @@ import {
   patchUsageConsolidationFailure,
 } from '../actions';
 
-export default ({ usageConsolidationApi }) => (action$, store) => {
-  return action$
-    .filter(action => action.type === PATCH_USAGE_CONSOLIDATION)
-    .mergeMap(({ payload }) => {
+export default ({ usageConsolidationApi }) => (action$, state$) => {
+  return action$.pipe(
+    filter(action => action.type === PATCH_USAGE_CONSOLIDATION),
+    mergeMap(({ payload }) => {
       const { credentialsId, data } = payload;
 
       return usageConsolidationApi
-        .patchUsageConsolidation(store.getState().okapi, credentialsId, { data })
-        .map(() => patchUsageConsolidationSuccess(data.attributes))
-        .catch(errors => Observable.of(patchUsageConsolidationFailure(errors)));
-    });
+        .assignUser(state$.value.okapi, credentialsId, { data })
+        .pipe(
+          map(() => patchUsageConsolidationSuccess(data.attributes)),
+          catchError(errors => of(patchUsageConsolidationFailure(errors))),
+        );
+    }),
+  );
 };
