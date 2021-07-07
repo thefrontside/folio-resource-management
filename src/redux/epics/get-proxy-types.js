@@ -1,7 +1,10 @@
-import { Observable } from 'rxjs/Observable';
-import 'rxjs/add/observable/of';
-import 'rxjs/add/operator/map';
-import 'rxjs/add/operator/catch';
+import { of } from 'rxjs';
+import {
+  mergeMap,
+  filter,
+  map,
+  catchError,
+} from 'rxjs/operators';
 
 import {
   GET_PROXY_TYPES,
@@ -9,15 +12,18 @@ import {
   getProxyTypesFailure,
 } from '../actions';
 
-export default ({ proxyTypesApi }) => (action$, store) => {
-  return action$
-    .filter(action => action.type === GET_PROXY_TYPES)
-    .mergeMap(action => {
+export default ({ proxyTypesApi }) => (action$, state$) => {
+  return action$.pipe(
+    filter(action => action.type === GET_PROXY_TYPES),
+    mergeMap(action => {
       const { payload: credentialId } = action;
 
       return proxyTypesApi
-        .getAll(store.getState().okapi, credentialId)
-        .map(getProxyTypesSuccess)
-        .catch(errors => Observable.of(getProxyTypesFailure({ errors })));
-    });
+        .getAll(state$.value.okapi, credentialId)
+        .pipe(
+          map(getProxyTypesSuccess),
+          catchError(errors => of(getProxyTypesFailure({ errors })))
+        );
+    }),
+  );
 };

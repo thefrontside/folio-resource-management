@@ -1,7 +1,10 @@
-import { Observable } from 'rxjs/Observable';
-import 'rxjs/add/observable/of';
-import 'rxjs/add/operator/map';
-import 'rxjs/add/operator/catch';
+import { of } from 'rxjs';
+import {
+  mergeMap,
+  filter,
+  map,
+  catchError,
+} from 'rxjs/operators';
 
 import {
   UPDATE_UC_CREDENTIALS,
@@ -9,15 +12,18 @@ import {
   updateUcCredentialsSuccess,
 } from '../actions';
 
-export default ({ ucCredentialsApi }) => (action$, store) => {
-  return action$
-    .filter(action => action.type === UPDATE_UC_CREDENTIALS)
-    .mergeMap(action => {
+export default ({ ucCredentialsApi }) => (action$, state$) => {
+  return action$.pipe(
+    filter(action => action.type === UPDATE_UC_CREDENTIALS),
+    mergeMap(action => {
       const { payload } = action;
 
       return ucCredentialsApi
-        .updateUcCredentials(store.getState().okapi, payload)
-        .map(updateUcCredentialsSuccess)
-        .catch(errors => Observable.of(updateUcCredentialsFailure(errors)));
-    });
+        .updateUcCredentials(state$.value.okapi, payload)
+        .pipe(
+          map(updateUcCredentialsSuccess),
+          catchError(errors => of(updateUcCredentialsFailure(errors)))
+        );
+    }),
+  );
 };

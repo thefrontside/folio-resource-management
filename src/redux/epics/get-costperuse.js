@@ -1,7 +1,10 @@
-import { Observable } from 'rxjs/Observable';
-import 'rxjs/add/observable/of';
-import 'rxjs/add/operator/map';
-import 'rxjs/add/operator/catch';
+import { of } from 'rxjs';
+import {
+  mergeMap,
+  filter,
+  map,
+  catchError,
+} from 'rxjs/operators';
 
 import {
   GET_COST_PER_USE,
@@ -10,25 +13,30 @@ import {
 } from '../actions';
 import { costPerUseTypes } from '../../constants';
 
-export default ({ costPerUseApi }) => (action$, store) => {
-  return action$
-    .filter(action => action.type === GET_COST_PER_USE)
-    .mergeMap(({ payload: { listType, id, filterData } }) => costPerUseApi
-      .getCostPerUse(store.getState().okapi, listType, id, filterData)
-      .map((payload) => {
-        let costPerUseData = payload;
+export default ({ costPerUseApi }) => (action$, state$) => {
+  return action$.pipe(
+    filter(action => action.type === GET_COST_PER_USE),
+    mergeMap(({ payload: { listType, id, filterData } }) => {
+      return costPerUseApi
+        .getCostPerUse(state$.value.okapi, listType, id, filterData)
+        .pipe(
+          map(payload => {
+            let costPerUseData = payload;
 
-        if (payload.type !== costPerUseTypes.TITLE_COST_PER_USE) {
-          costPerUseData = {
-            ...payload,
-            attributes: {
-              ...payload.attributes,
-              analysis: payload.attributes.analysis[`${filterData.platformType}Platforms`],
-            },
-          };
-        }
+            if (payload.type !== costPerUseTypes.TITLE_COST_PER_USE) {
+              costPerUseData = {
+                ...payload,
+                attributes: {
+                  ...payload.attributes,
+                  analysis: payload.attributes.analysis[`${filterData.platformType}Platforms`],
+                },
+              };
+            }
 
-        return getCostPerUseSuccess(costPerUseData);
-      })
-      .catch(errors => Observable.of(getCostPerUseFailure({ errors }))));
+            return getCostPerUseSuccess(costPerUseData);
+          }),
+          catchError(errors => of(getCostPerUseFailure({ errors })))
+        );
+    }),
+  );
 };

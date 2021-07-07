@@ -1,8 +1,10 @@
-import { Observable } from 'rxjs/Observable';
-import 'rxjs/add/observable/from';
-import 'rxjs/add/observable/of';
-import 'rxjs/add/operator/map';
-import 'rxjs/add/operator/catch';
+import { from, of } from 'rxjs';
+import {
+  map,
+  catchError,
+  mergeMap,
+  filter,
+} from 'rxjs/operators';
 import get from 'lodash/get';
 
 import { qs } from '../components/utilities';
@@ -482,9 +484,9 @@ export function reducer(state = {}, action) { // NOSONAR
 /**
  * The epic used to actually make a requests when an action is dispatched
  * @param {Observable} action$ - the observable action
- * @param {Function} store.getState - get's the most recent redux state
+ * @param {Function} state$ - get's the most recent redux state
  */
-export function epic(action$, { getState }) {
+export function epic(action$, state$) {
   const actionMethods = {
     [actionTypes.QUERY]: 'GET',
     [actionTypes.FIND]: 'GET',
@@ -493,11 +495,12 @@ export function epic(action$, { getState }) {
     [actionTypes.DELETE]: 'DELETE'
   };
 
-  return action$
-    .filter(({ type }) => actionMethods[type])
-    .mergeMap(({ type, data, payload }) => {
-      const state = getState();
+  return action$.pipe(
+    filter(({ type }) => actionMethods[type]),
+    mergeMap((action) => {
+      const { type, data, payload } = action;
       const method = actionMethods[type];
+      const state = state$.value;
 
       // the request object created from this action
       const request = state.eholdings.data[data.type].requests[data.timestamp];
@@ -535,8 +538,10 @@ export function epic(action$, { getState }) {
           : Promise.reject({ errors: responseBody.errors, status }))); // eslint-disable-line prefer-promise-reject-errors
 
       // an observable from resolving or rejecting the request payload
-      return Observable.from(promise)
-        .map(({ status, responseBody }) => resolve(request, responseBody, payload, status))
-        .catch(({ errors, status }) => Observable.of(reject(request, errors, data, status)));
-    });
+      return from(promise).pipe(
+        map(({ status, responseBody }) => resolve(request, responseBody, payload, status)),
+        catchError(({ errors, status }) => of(reject(request, errors, data, status))),
+      );
+    })
+  );
 }

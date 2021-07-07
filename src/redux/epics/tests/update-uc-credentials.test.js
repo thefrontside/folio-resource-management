@@ -1,4 +1,4 @@
-import { TestScheduler } from 'rxjs/Rx';
+import { TestScheduler } from 'rxjs/testing';
 
 import createUpdateUcCredentialsEpic from '../update-uc-credentials';
 
@@ -8,7 +8,7 @@ import {
   UPDATE_UC_CREDENTIALS_FAILURE,
 } from '../../actions';
 
-describe('(epic) getUcCredentials', () => {
+describe('(epic) updatetUcCredentials', () => {
   let testScheduler;
 
   beforeEach(() => {
@@ -18,14 +18,12 @@ describe('(epic) getUcCredentials', () => {
   });
 
   const state$ = {
-    getState: () => {
-      return {
-        okapi: {
-          url: 'https://folio-snapshot',
-          tenant: 'diku',
-          token: 'token',
-        },
-      };
+    value: {
+      okapi: {
+        url: 'https://folio-snapshot',
+        tenant: 'diku',
+        token: 'token',
+      },
     },
   };
 

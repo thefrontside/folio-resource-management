@@ -1,6 +1,6 @@
 /* global describe, it, beforeEach */
 import { expect } from 'chai';
-import { TestScheduler } from 'rxjs/Rx';
+import { TestScheduler } from 'rxjs/testing';
 
 import { createDeleteAgreementLinesEpic } from '../../../../../src/redux/epics';
 import {
@@ -11,13 +11,13 @@ import {
 
 describe('(epic) deleteAgreementLines', () => {
   const state$ = {
-    getState: () => ({
+    value: {
       okapi: {
         url: 'https://folio-snapshot',
         tenant: 'diku',
         token: 'token',
       },
-    }),
+    },
   };
 
   let testScheduler;
