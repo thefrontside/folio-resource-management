@@ -53,10 +53,33 @@ const QuerySearchList = ({
   if (!length) {
     return notFoundMessage;
   }
-
+  /**
+   * main function for paggination
+   * now it's working for prev next buttons
+   * in commented code functionality for load more button
+   * which is already emplemented and working correctly
+   */
   const getLoadMoreButton = () => {
     const isUnloadedPagesPresent = (totalLength !== length) && !(length % PAGE_SIZE);
 
+    return (
+      <>
+        <Button
+          disabled={page === 1} // for first page prev button should be disabled 
+          onClick={() => { setPage(page - 1); }}
+        >
+          prev
+        </Button>
+        {/* place for page counter */}
+        <Button
+          disabled={isUnloadedPagesPresent} // for the last page it should be disabled
+          onClick={() => { setPage(page + 1); }}
+        >
+          next
+        </Button>
+      </>
+    );
+    /*  
     if (isUnloadedPagesPresent) {
       return (
         <div className={styles['button-wrapper']}>
@@ -71,6 +94,7 @@ const QuerySearchList = ({
     }
 
     return null;
+    */
   };
 
   return (

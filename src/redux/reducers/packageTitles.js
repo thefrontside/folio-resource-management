@@ -29,7 +29,8 @@ const handlers = {
     isLoading: false,
     hasLoaded: true,
     hasFailed: false,
-    items: [...state.items, ...payload.data],
+    // just one change, it is set new collection to state after each *next-prev* click
+    items: [...payload.data],
     totalResults: payload.totalResults,
   }),
   [GET_PACKAGE_TITLES_FAILURE]: (state, action) => ({
